@@ -34,14 +34,23 @@ curl -s -X PUT -u "elastic:${ES_PASS}" \
     "cluster": [ "monitor" ]
   }' > /dev/null
 
-echo "[es-setup] 3. Nginx 프록시가 사용할 대리 실행 계정 (proxy_admin) 생성..."
+echo "[es-setup] 3. Nginx 프록시가 사용할 대리 실행 계정 (proxy_user / proxy_admin) 생성..."
+curl -s -X POST -u "elastic:${ES_PASS}" \
+  -H "Content-Type: application/json" \
+  "${ES_URL}/_security/user/proxy_user" \
+  -d '{
+    "password" : "proxy_password",
+    "roles" : [ "proxy_runas_role" ],
+    "full_name" : "Nginx 2FA Proxy Impersonator (proxy_user)"
+  }' > /dev/null
+
 curl -s -X POST -u "elastic:${ES_PASS}" \
   -H "Content-Type: application/json" \
   "${ES_URL}/_security/user/proxy_admin" \
   -d "{
     \"password\" : \"${ES_PASS}\",
     \"roles\" : [ \"proxy_runas_role\" ],
-    \"full_name\" : \"Nginx 2FA Proxy Impersonator\"
+    \"full_name\" : \"Nginx 2FA Proxy Impersonator (proxy_admin)\"
   }" > /dev/null
 
 echo "[es-setup] 4. 가상 2FA 사용자 계정 생성 (admin, user_a, user_b, face_user1)..."
