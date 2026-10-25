@@ -1,0 +1,37 @@
+# ==============================================================================
+# Kibana 설정 파일 (es-setup/kibana.yml)
+#
+# [서비스 역할]
+# - Elasticsearch에 저장된 데이터를 시각화하고 관리하는 웹 UI 서비스입니다.
+# - 앞단의 Nginx 리버스 프록시에서 2FA(안면인증) 검증 후 주입한 헤더를 수신하여
+#   Elasticsearch로 전달함으로써 `run_as` 기반 대리 로그인을 완성합니다.
+#
+# [포트 및 네트워크 연결 구조]
+# - 컨테이너 리스닝 포트: 5601 (호스트 5601:5601 매핑 및 Nginx 내부 프록시 대상)
+# - 연동 Elasticsearch 주소: http://elasticsearch:9200 (Docker 내부 브리지 네트워크)
+# ==============================================================================
+
+# Kibana 서버 호스트 및 포트 설정
+# 컨테이너 외부(Nginx 프록시 및 호스트 브라우저)에서 접근할 수 있도록 0.0.0.0으로 바인딩합니다.
+server.name: "poc-kibana"
+server.host: "0.0.0.0"
+server.port: 5601
+
+# 연동할 Elasticsearch 클러스터 노드 URL (Docker 네트워크 내부 서비스명 사용)
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+
+# Kibana 서버 자체가 Elasticsearch와 시스템 통신(인덱스 관리, 상태 체크 등)을 수행할 때
+# 사용하는 내부 시스템 계정 정보입니다. (init-es.sh에서 비밀번호가 자동 설정됨)
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "${ELASTICSEARCH_PASSWORD}"
+
+# [핵심 설정] 클라이언트(Nginx 리버스 프록시)로부터 전달받아 Elasticsearch로 넘겨줄 HTTP 헤더 화이트리스트
+# - "authorization": Nginx가 주입하는 대리 실행(Proxy) 계정의 Basic Auth 인증 헤더
+# - "es-security-runas-user": 2FA(안면인증)를 통과한 실제 사용자의 ID를 담는 헤더
+# 주의: 이 설정이 누락되면 Kibana가 `es-security-runas-user` 헤더를 차단하여 run_as가 동작하지 않습니다.
+elasticsearch.requestHeadersWhitelist: [ "es-security-runas-user", "authorization" ]
+
+# 로깅 설정: 컨테이너 표준 출력(stdout)으로 로그를 남겨 Docker logging driver가 수집하도록 구성
+logging.dest: stdout
+logging.quiet: false
+

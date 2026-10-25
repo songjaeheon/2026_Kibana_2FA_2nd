@@ -1,0 +1,14 @@
+{
+  "name": "mock-auth-api",
+  "version": "1.0.0",
+  "description": "Elasticsearch run_as 연동을 위한 가상 2FA(안면인증) 서버",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "express": "^4.19.2"
+  }
+}
+
